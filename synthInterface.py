@@ -69,8 +69,8 @@ class MySoundModel() :
     ''' returns list of paramter names and their ranges '''
 	def paramProps(self) :
 		plist=[]
-        for p in self.param :
-        	plist.append(self.param[p])
+		for p in self.param :
+			plist.append(self.param[p])
 		return plist
 
 ##################################################################################################
