@@ -66,7 +66,7 @@ class MySoundModel() :
 	def generate(self, sigLenSecs=1) :
 		return np.zeros(sigLenSecs*self.sr)
 
-    ''' returns list of paramter names and their ranges '''
+	''' returns list of paramter names and their ranges '''
 	def paramProps(self) :
 		plist=[]
 		for p in self.param :
