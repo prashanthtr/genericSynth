@@ -73,6 +73,12 @@ class MySoundModel() :
 			plist.append(self.param[p])
 		return plist
 
+    ''' Print all the parameters and their ranges from the synth'''
+    def printParams(self):
+        paramVals = self.paramProps()
+        for params in paramVals:
+            print( "Name: ", params.name, " Default value : ", params.val, " Max value ", params.max, " Min value ", params.min )
+
 ##################################################################################################
 # A couple of handy-dandy UTILITY FUNCTIONS for event pattern synthesizers in particular
 ##################################################################################################
