@@ -137,3 +137,15 @@ def gesture(startVal, stopVal, cutOff, numSamples):
         for index in range(len(non_zero)):
                 gesture[index] = non_zero[index]
         return gesture
+
+def genericGesture(startVal, stopVal, cutOff, numSamples):
+        gesture = np.zeros(numSamples)
+        ascending = np.linspace(startVal, stopVal, int(cutOff*numSamples))
+        descending = np.linspace(stopVal, startVal, numSamples - int(cutOff*numSamples))
+        
+        for index in range(len(ascending)):
+            gesture[index] = ascending[index]
+        for index in range(len(descending)):
+            gesture[index+len(ascending)] = descending[index]
+
+        return gesture
