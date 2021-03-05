@@ -3,11 +3,12 @@ import numpy as np
 import math
 
 class MyParam():
-    def __init__(self,name,min,max, val, cb) :
+    def __init__(self,name,min,max, val, synth_doc, cb) :
         self.name=name
         self.min=min
         self.max=max
         self.val=val
+        self.synth_doc = synth_doc
         self.cb=cb
 
     # only store the actual value, not the normed value used for setting
@@ -27,8 +28,8 @@ class MySoundModel() :
         self.param = {} # a dictionary of MyParams
         self.sr = sr # makes a single event
 
-    def __addParam__(self, name,min,max,val, cb=None) :
-        self.param[name]=MyParam(name,min,max,val, cb)
+    def __addParam__(self, name,min,max,val, synth_doc="", cb=None) :
+        self.param[name]=MyParam(name,min,max,val, synth_doc, cb)
 
 
     def setParam(self, name, value) :
@@ -51,7 +52,8 @@ class MySoundModel() :
             return self.param[name].max
         if prop == "name" :
             return self.param[name].name
-
+        if prop == "synth_doc" :
+            return self.param[name].synth_doc
 
     ''' returns list of paramter names that can be set by the user '''
     def getParams(self) :
@@ -77,7 +79,7 @@ class MySoundModel() :
     def printParams(self):
         paramVals = self.paramProps()
         for params in paramVals:
-            print( "Name: ", params.name, " Default value : ", params.val, " Max value ", params.max, " Min value ", params.min )
+            print( "Name: ", params.name, " Current value : ", params.val, " Max value ", params.max, " Min value ", params.min )
 
 ##################################################################################################
 # A couple of handy-dandy UTILITY FUNCTIONS for event pattern synthesizers in particular
@@ -131,6 +133,11 @@ def selectVariation(sig, sr, varNum, varDurationSecs):
 
 '''Gestures are transformation function specifying changes about an aspect of a
 sound over time. Used for creating amplitude envelopes or frequency sweeps.'''
+
+'''Linearly interpolates from start to stop val
+   Startval: Float, int
+   Stopval: Float, int
+''' 
 def gesture(startVal, stopVal, cutOff, numSamples):
         gesture = np.zeros(numSamples)
         non_zero = np.linspace(startVal, stopVal, int(cutOff*numSamples))
@@ -138,6 +145,11 @@ def gesture(startVal, stopVal, cutOff, numSamples):
                 gesture[index] = non_zero[index]
         return gesture
 
+'''Generic gesture creates 2 linear interpolations.'''
+''' Startval: Float, int
+    Stopval: Float, int 
+    2 interpolations: Start to stop, and stop to start
+'''
 def genericGesture(startVal, stopVal, cutOff, numSamples):
         gesture = np.zeros(numSamples)
         ascending = np.linspace(startVal, stopVal, int(cutOff*numSamples))
@@ -149,3 +161,19 @@ def genericGesture(startVal, stopVal, cutOff, numSamples):
             gesture[index+len(ascending)] = descending[index]
 
         return gesture
+
+''' Create an array comprised of linear segments between breakpoints '''
+# y - list of values
+# s - list of number of samples to interpolate between sucessive values
+def bkpoint(y,s) :
+    assert(len(y)==(len(s)+1))
+    sig=[]
+    for j in range(len(y)-1) :
+        sig=np.concatenate((sig, np.linspace(y[j], y[j+1], s[j], False)), 0)
+    return sig
+
+def oct2freq(octs, bf=440.) :
+    return bf * np.power(2,octs)
+
+def freq2oct(freq, bf=440.) :
+    return np.log2(freq/bf)
