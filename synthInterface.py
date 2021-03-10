@@ -3,13 +3,13 @@ import numpy as np
 import math
 
 class MyParam():
-    def __init__(self,name,min,max, val, synth_doc, cb) :
+    def __init__(self,name,min,max, val, cb,synth_doc) :
         self.name=name
         self.min=min
         self.max=max
         self.val=val
-        self.synth_doc = synth_doc
         self.cb=cb
+        self.synth_doc = synth_doc
 
     # only store the actual value, not the normed value used for setting
     def __setParamNorm__(self, i_val) :
@@ -28,8 +28,8 @@ class MySoundModel() :
         self.param = {} # a dictionary of MyParams
         self.sr = sr # makes a single event
 
-    def __addParam__(self, name,min,max,val, synth_doc="", cb=None) :
-        self.param[name]=MyParam(name,min,max,val, synth_doc, cb)
+    def __addParam__(self, name,min,max,val, cb=None,synth_doc="") :
+        self.param[name]=MyParam(name,min,max,val, cb,synth_doc)
 
 
     def setParam(self, name, value) :
@@ -79,7 +79,7 @@ class MySoundModel() :
     def printParams(self):
         paramVals = self.paramProps()
         for params in paramVals:
-            print( "Name: ", params.name, " Current value : ", params.val, " Max value ", params.max, " Min value ", params.min )
+            print( "Name: ", params.name, " Current value : ", params.val, " Max value ", params.max, " Min value ", params.min, "Synth Doc", params.synth_doc )
 
 ##################################################################################################
 # A couple of handy-dandy UTILITY FUNCTIONS for event pattern synthesizers in particular
