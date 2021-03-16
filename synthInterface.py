@@ -28,20 +28,20 @@ class MySoundModel() :
         self.param = {} # a dictionary of MyParams
         self.sr = sr # makes a single event
 
-    def __addParam__(self, name,min,max,val, cb=None,synth_doc="") :
+    def __addParam__(self, name,min,max,val, cb=None, synth_doc="") :
         self.param[name]=MyParam(name,min,max,val, cb,synth_doc)
 
 
     def setParam(self, name, value) :
-        self.param[name].val=value
         if self.param[name].cb is not None :
             self.param[name].cb(value)
+        self.param[name].val=value
 
     ''' set parameters using [0,1] which gets mapped to [min, max] '''
     def setParamNorm(self, name, nvalue) :
-        self.param[name].__setParamNorm__(nvalue)
         if self.param[name].cb is not None :
             self.param[name].cb(self.getParam(name))
+        self.param[name].__setParamNorm__(nvalue)
 
     def getParam(self, name, prop="val") :
         if prop == "val" :
@@ -87,8 +87,14 @@ class MySoundModel() :
 '''
 creates a list of event times that happen with a rate of 2^r_exp
       and deviate from the strict equal space according to irreg_exp
+
+      @rng - If None, uses fixed seed for repeatability. Otherwise, provide your own, seeded for repeatability or not.
+                default: rng = np.random.default_rng(18005551212) 
 '''
-def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs) :
+def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None) :
+    if rng==None :
+        rng = np.random.default_rng(18005551212)
+
     # mapping to the right range units
     eps=np.power(2,rate_exp)
     irregularity=.1*irreg_exp*np.power(10,irreg_exp)
@@ -100,7 +106,7 @@ def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs) :
     linspacesteps=int(eps*durationSecs)
     linspacedur = linspacesteps/eps
 
-    eventtimes=[(x+np.random.normal(scale=sd))%durationSecs for x in np.linspace(0, linspacedur, linspacesteps, endpoint=False)]
+    eventtimes=[(x+rng.normal(scale=sd))%durationSecs for x in np.linspace(0, linspacedur, linspacesteps, endpoint=False)]
 
     return np.sort(eventtimes) #sort because we "wrap around" any events that go off the edge of [0. durationSecs]
 
