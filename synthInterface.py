@@ -24,24 +24,30 @@ class MyParam():
 '''
 class MySoundModel() :
 
-    def __init__(self,sr=16000) :
+    def __init__(self,sr=16000, rng=None) :
         self.param = {} # a dictionary of MyParams
-        self.sr = sr # makes a single event
+        self.sr = sr 
+        if rng==None :
+            print(f"{self.__class__.__name__} creating new RNG")
+            self.rng = np.random.default_rng(18005551212)
+        else :
+            self.rng = rng
 
-    def __addParam__(self, name,min,max,val, cb=None,synth_doc="") :
+
+    def __addParam__(self, name,min,max,val, cb=None, synth_doc="") :
         self.param[name]=MyParam(name,min,max,val, cb,synth_doc)
 
 
     def setParam(self, name, value) :
-        self.param[name].val=value
         if self.param[name].cb is not None :
             self.param[name].cb(value)
+        self.param[name].val=value
 
     ''' set parameters using [0,1] which gets mapped to [min, max] '''
     def setParamNorm(self, name, nvalue) :
-        self.param[name].__setParamNorm__(nvalue)
         if self.param[name].cb is not None :
             self.param[name].cb(self.getParam(name))
+        self.param[name].__setParamNorm__(nvalue)
 
     def getParam(self, name, prop="val") :
         if prop == "val" :
@@ -82,15 +88,54 @@ class MySoundModel() :
             print( "Name: ", params.name, " Current value : ", params.val, " Max value ", params.max, " Min value ", params.min, "Synth Doc", params.synth_doc )
 
 ##################################################################################################
+# A Ensemble class for playing a bunch of DSSynth models together
+##################################################################################################
+'''
+    A DSSynth for creating a bunch of models that play at the same time.
+    Create each in the usual way, setting their parameters, etc. Then pass them as an array to DSEnsemble.
+    The factory takes an optional argument for a list of amplitudes that, if used, must be the same length as the models list.
+    The generate function takes a spreadSecs argument that lest you spread out start times evenly over an interval.
+'''
+class DSEnsemble(MySoundModel) : 
+    def __init__(self,  models=[], amp=[], rng=None) :
+        MySoundModel.__init__(self)
+        self.numModels= len(models)
+        self.models=models
+        if len(amp) != len(models) :
+            print(f'will use uniform amplitudes unless len(amps) == len(models)')
+            amp=np.ones(len(models))*.6
+        self.amp=amp
+
+    def generate(self,  durationSecs, spreadSecs=1) :
+        numSamples=int(self.sr*durationSecs)
+        spreadsamples=int(self.sr*spreadSecs)
+        
+        sig=np.zeros(numSamples+spreadsamples)
+        for i in range (self.numModels) :
+            gensig = self.amp[i]*self.models[i].generate(durationSecs) 
+            sig = addin(gensig, sig, self.rng.integers(0,spreadsamples)) 
+        return sig[:numSamples]
+
+
+##################################################################################################
 # A couple of handy-dandy UTILITY FUNCTIONS for event pattern synthesizers in particular
 ##################################################################################################
 '''
 creates a list of event times that happen with a rate of 2^r_exp
       and deviate from the strict equal space according to irreg_exp
+
+      @rng - If None, uses fixed seed for repeatability. Otherwise, provide your own, seeded for repeatability or not.
+                default: rng = np.random.default_rng(18005551212) 
+
+      @wrap - mode by duration so that anything that fell off either end is wrapped back in to [0,durationSecs]
+      @roll - shift all events so that first one starts at time 0
 '''
-def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs) :
+def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None, verbose=False, wrap=True, roll=False) :
+    if rng==None :
+        rng = np.random.default_rng(18005551212)
+
     # mapping to the right range units
-    eps=np.power(2,rate_exp)
+    eps=np.power(2.,rate_exp)
     irregularity=.1*irreg_exp*np.power(10,irreg_exp)
     #irregularity=.04*np.power(10,irreg_exp)
     sd=irregularity/eps
@@ -100,9 +145,25 @@ def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs) :
     linspacesteps=int(eps*durationSecs)
     linspacedur = linspacesteps/eps
 
-    eventtimes=[(x+np.random.normal(scale=sd))%durationSecs for x in np.linspace(0, linspacedur, linspacesteps, endpoint=False)]
+    if verbose :
+        print(f'noisySpacingTimeList: eps is {eps}, sd = {sd}, linspacesteps is {linspacesteps}, linspacedur is {linspacedur}')
 
-    return np.sort(eventtimes) #sort because we "wrap around" any events that go off the edge of [0. durationSecs]
+    eventtimes=[(x+rng.normal(scale=sd))%durationSecs for x in np.linspace(0, linspacedur, linspacesteps, endpoint=False)]
+
+    if verbose :
+        print(f'noisySpacingTimeList: (BEFORE wrapped, rolled) eventtimes =  {eventtimes}')
+
+
+    if wrap :
+        eventtimes=np.sort(np.mod(eventtimes, durationSecs))
+    if roll :
+        eventtimes=eventtimes-np.min(eventtimes)
+
+    if verbose :
+        print(f'noisySpacingTimeList: (wrapped, rolled) eventtimes =  {eventtimes}')
+
+
+    return eventtimes #sort because we "wrap around" any events that go off the edge of [0. durationSecs]
 
 
 
