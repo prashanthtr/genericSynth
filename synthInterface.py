@@ -126,11 +126,16 @@ creates a list of event times that happen with a rate of 2^r_exp
 
       @rng - If None, uses fixed seed for repeatability. Otherwise, provide your own, seeded for repeatability or not.
                 default: rng = np.random.default_rng(18005551212) 
+<<<<<<< HEAD
 
       @wrap - mode by duration so that anything that fell off either end is wrapped back in to [0,durationSecs]
       @roll - shift all events so that first one starts at time 0
 '''
 def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None, verbose=False, wrap=True, roll=False) :
+=======
+'''
+def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None) :
+>>>>>>> 040b7fc3f8f383025ad6725d4e7f683aeffa8206
     if rng==None :
         rng = np.random.default_rng(18005551212)
 
@@ -145,6 +150,7 @@ def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None, verbose=F
     linspacesteps=int(eps*durationSecs)
     linspacedur = linspacesteps/eps
 
+<<<<<<< HEAD
     if verbose :
         print(f'noisySpacingTimeList: eps is {eps}, sd = {sd}, linspacesteps is {linspacesteps}, linspacedur is {linspacedur}')
 
@@ -162,6 +168,9 @@ def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None, verbose=F
     if verbose :
         print(f'noisySpacingTimeList: (wrapped, rolled) eventtimes =  {eventtimes}')
 
+=======
+    eventtimes=[(x+rng.normal(scale=sd))%durationSecs for x in np.linspace(0, linspacedur, linspacesteps, endpoint=False)]
+>>>>>>> 040b7fc3f8f383025ad6725d4e7f683aeffa8206
 
     return eventtimes #sort because we "wrap around" any events that go off the edge of [0. durationSecs]
 
