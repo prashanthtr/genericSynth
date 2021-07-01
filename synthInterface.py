@@ -26,7 +26,7 @@ class MySoundModel() :
 
     def __init__(self,sr=16000, rng=None) :
         self.param = {} # a dictionary of MyParams
-        self.sr = sr 
+        self.sr = sr
         if rng==None :
             print(f"{self.__class__.__name__} creating new RNG")
             self.rng = np.random.default_rng(18005551212)
@@ -96,7 +96,7 @@ class MySoundModel() :
     The factory takes an optional argument for a list of amplitudes that, if used, must be the same length as the models list.
     The generate function takes a spreadSecs argument that lest you spread out start times evenly over an interval.
 '''
-class DSEnsemble(MySoundModel) : 
+class DSEnsemble(MySoundModel) :
     def __init__(self,  models=[], amp=[], rng=None) :
         MySoundModel.__init__(self)
         self.numModels= len(models)
@@ -109,11 +109,11 @@ class DSEnsemble(MySoundModel) :
     def generate(self,  durationSecs, spreadSecs=1) :
         numSamples=int(self.sr*durationSecs)
         spreadsamples=int(self.sr*spreadSecs)
-        
+
         sig=np.zeros(numSamples+spreadsamples)
         for i in range (self.numModels) :
-            gensig = self.amp[i]*self.models[i].generate(durationSecs) 
-            sig = addin(gensig, sig, self.rng.integers(0,spreadsamples)) 
+            gensig = self.amp[i]*self.models[i].generate(durationSecs)
+            sig = addin(gensig, sig, self.rng.integers(0,spreadsamples))
         return sig[:numSamples]
 
 
@@ -125,17 +125,12 @@ creates a list of event times that happen with a rate of 2^r_exp
       and deviate from the strict equal space according to irreg_exp
 
       @rng - If None, uses fixed seed for repeatability. Otherwise, provide your own, seeded for repeatability or not.
-                default: rng = np.random.default_rng(18005551212) 
-<<<<<<< HEAD
-
+                default: rng = np.random.default_rng(18005551212)
       @wrap - mode by duration so that anything that fell off either end is wrapped back in to [0,durationSecs]
       @roll - shift all events so that first one starts at time 0
 '''
 def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None, verbose=False, wrap=True, roll=False) :
-=======
-'''
-def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None) :
->>>>>>> 040b7fc3f8f383025ad6725d4e7f683aeffa8206
+
     if rng==None :
         rng = np.random.default_rng(18005551212)
 
@@ -150,7 +145,6 @@ def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None) :
     linspacesteps=int(eps*durationSecs)
     linspacedur = linspacesteps/eps
 
-<<<<<<< HEAD
     if verbose :
         print(f'noisySpacingTimeList: eps is {eps}, sd = {sd}, linspacesteps is {linspacesteps}, linspacedur is {linspacedur}')
 
@@ -167,10 +161,6 @@ def noisySpacingTimeList(rate_exp, irreg_exp, durationSecs,  rng=None) :
 
     if verbose :
         print(f'noisySpacingTimeList: (wrapped, rolled) eventtimes =  {eventtimes}')
-
-=======
-    eventtimes=[(x+rng.normal(scale=sd))%durationSecs for x in np.linspace(0, linspacedur, linspacesteps, endpoint=False)]
->>>>>>> 040b7fc3f8f383025ad6725d4e7f683aeffa8206
 
     return eventtimes #sort because we "wrap around" any events that go off the edge of [0. durationSecs]
 
@@ -207,7 +197,7 @@ sound over time. Used for creating amplitude envelopes or frequency sweeps.'''
 '''Linearly interpolates from start to stop val
    Startval: Float, int
    Stopval: Float, int
-''' 
+'''
 def gesture(startVal, stopVal, cutOff, numSamples):
         gesture = np.zeros(numSamples)
         non_zero = np.linspace(startVal, stopVal, int(cutOff*numSamples))
@@ -217,14 +207,14 @@ def gesture(startVal, stopVal, cutOff, numSamples):
 
 '''Generic gesture creates 2 linear interpolations.'''
 ''' Startval: Float, int
-    Stopval: Float, int 
+    Stopval: Float, int
     2 interpolations: Start to stop, and stop to start
 '''
 def genericGesture(startVal, stopVal, cutOff, numSamples):
         gesture = np.zeros(numSamples)
         ascending = np.linspace(startVal, stopVal, int(cutOff*numSamples))
         descending = np.linspace(stopVal, startVal, numSamples - int(cutOff*numSamples))
-        
+
         for index in range(len(ascending)):
             gesture[index] = ascending[index]
         for index in range(len(descending)):
